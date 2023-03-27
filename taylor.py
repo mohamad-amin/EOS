@@ -256,7 +256,6 @@ def track_dynamics(
                 break
             dynamics = tree_stack(save_list)
             dynamics["beta"] = {key: jnp.array(val[1]) for key, val in betas.items()}
-            import IPython; IPython.embed()  # Todo: beta
             dynamics["slow_stats"] = slow_stats
             tree_save(dynamics, save_dir + "/dynamics.pytree", overwrite=True)
         else:
