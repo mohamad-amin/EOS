@@ -45,7 +45,7 @@ def build_loss(model, data, criterion, batch_size=None, model_key=None, benchmar
     p = tree_map(lambda x: x.astype(jnp.float32), p)
     p, unravel = ravel_pytree(p)
     safe_unravel = lambda p: tree_map(lambda x: x.astype(p.dtype), unravel(p))
-    f = lambda p, x: model.apply(safe_unravel(p), x)
+    f = lambda p, x: model.apply(safe_unravel(p), x, mutable=['batch_stats'])[0]
 
     @jit
     def batch_loss(p, data):

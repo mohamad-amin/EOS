@@ -16,3 +16,11 @@ TorchConv = partial(
     bias_init=nn.initializers.zeros,
     dtype=None
 )
+TorchFixedBN = partial(
+    nn.BatchNorm,
+    momentum=0.0,
+    epsilon=0,
+    use_bias=False,
+    use_scale=False,
+    dtype=None
+)

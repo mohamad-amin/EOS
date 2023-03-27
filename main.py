@@ -15,13 +15,14 @@ from functools import partial
 import shutil
 
 FLAGS = flags.FLAGS
-flags.DEFINE_enum("model", None, model_dict.keys(), "Model")
-flags.DEFINE_enum("data", None, data_dict.keys(), "Data")
-flags.DEFINE_integer("n_classes", None, "Number of classes")
-flags.DEFINE_enum("criterion", None, criterion_dict.keys(), "Loss Criterion")
+flags.DEFINE_enum("model", "mlp", model_dict.keys(), "Model")
+flags.DEFINE_integer("model_width", 200, "Width of model")
+flags.DEFINE_enum("data", "cifar10", data_dict.keys(), "Data")
+flags.DEFINE_integer("n_classes", 10, "Number of classes")
+flags.DEFINE_enum("criterion", "cat_mse", criterion_dict.keys(), "Loss Criterion")
 flags.DEFINE_enum("activation", "swish", activation_dict.keys(), "Activation Function")
-flags.DEFINE_integer("n_samples", 5000, "Number of samples")
-flags.DEFINE_float("lr", None, "Learning Rate")
+flags.DEFINE_integer("n_samples", 512, "Number of samples")
+flags.DEFINE_float("lr", 0.002, "Learning Rate")
 flags.DEFINE_enum(
     "deriv_dtype", "f32", ["f32", "f64"], "Precision for higher order derivatives"
 )
@@ -35,7 +36,7 @@ flags.DEFINE_enum(
     "solver_dtype", "f32", ["f32", "f64"], "Precision for Eigenvalue Solver"
 )
 flags.DEFINE_float("solver_tol", 1e-9, "Tolerance for Eigenvalue Solver")
-flags.DEFINE_integer("ghost_batch_size", None, "Ghost batch size to save memory")
+flags.DEFINE_integer("ghost_batch_size", 512, "Ghost batch size to save memory")
 flags.DEFINE_integer("steps", 2000, "Number of steps")
 flags.DEFINE_integer("seed", 0, "Random seed")
 flags.DEFINE_boolean(
@@ -48,15 +49,15 @@ def main(args):
     config = {key: val.value for key, val in FLAGS._flags().items()}
     run_name = UID(config)
     save_dir = (
-        Path("experiments") / FLAGS.model / FLAGS.data / FLAGS.criterion / run_name
+        Path("/tmp/experiments") / FLAGS.model / FLAGS.data / FLAGS.criterion / run_name
     )
-    if save_dir.exists():
-        overwrite = input("File already exists. Overwrite? Y = yes, N = no\n")
-        if overwrite.lower() == "y":
-            shutil.rmtree(save_dir)
-        else:
-            quit()
-    save_dir.mkdir(parents=True)
+    # if save_dir.exists():
+    #     # overwrite = input("File already exists. Overwrite? Y = yes, N = no\n")
+    #     # if overwrite.lower() == "y":
+    #     shutil.rmtree(save_dir)
+    #     # else:
+    #     #     quit()
+    save_dir.mkdir(parents=True, exist_ok=True)
 
     print(f"Run Name: {run_name}")
     print(f"Save Directory: {save_dir}")
@@ -66,7 +67,7 @@ def main(args):
     activation = activation_dict[FLAGS.activation]
     criterion = criterion_dict[FLAGS.criterion]
     data = data_dict[FLAGS.data](FLAGS.n_samples)
-    model = model_dict[FLAGS.model](activation=activation, n_classes=FLAGS.n_classes)
+    model = model_dict[FLAGS.model](activation=activation, n_classes=FLAGS.n_classes, width=FLAGS.model_width)
     model_key, eig_key = random.split(random.PRNGKey(FLAGS.seed))
     p, loss = build_loss(
         model=model,

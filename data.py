@@ -1,4 +1,4 @@
-from datasets import load_dataset
+from datasets import load_from_disk, load_dataset
 from transformers import AutoTokenizer
 import numpy as np
 from jax import numpy as jnp
@@ -7,7 +7,8 @@ import os
 
 
 def cifar10(n):
-    trainset = load_dataset("cifar10")["train"]
+    # trainset = load_dataset("cifar10")["train"]
+    trainset = load_from_disk("data_files")["train"]
     x = np.stack(trainset[:n]["img"])
     y = np.array(trainset[:n]["label"])
     x, y = jnp.array(x, dtype=jnp.float32), jnp.array(y, dtype=jnp.int32)
@@ -16,7 +17,8 @@ def cifar10(n):
 
 
 def cifar10_binary(n):
-    trainset = load_dataset("cifar10")["train"]
+    # trainset = load_dataset("cifar10")["train"]
+    trainset = load_from_disk("data_files")["train"]
     y = np.array(trainset["label"])
     cat_idx = np.argwhere(y == 3)[: n // 2, 0]
     dog_idx = np.argwhere(y == 5)[: n // 2, 0]

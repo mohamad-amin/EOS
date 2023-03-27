@@ -1,0 +1,21 @@
+data:
+  seed: 0
+  name: cifar10
+  train_count: 1024
+
+model:
+  name: mlp
+  width: 200
+  n_classes: 10
+  activation: swish
+
+train:
+  lr: 0.002
+  criterion: cat_mse
+  ghost_batch_size: 999999
+  use_wandb: false
+
+computation:
+  steps: 20000
+  num_proj_steps: 3
+  generalized_pred: 3

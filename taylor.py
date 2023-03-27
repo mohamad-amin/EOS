@@ -11,7 +11,7 @@ import time
 from functools import wraps
 
 
-def find_instability(p, U, lr, loss):
+def find_instability(p, U, lr, loss, writer):
     pbar = tqdm()
     save_list = []
     t = 0
@@ -25,7 +25,7 @@ def find_instability(p, U, lr, loss):
             (S,), U = loss.eig((p + p_next) / 2, U)
             save_list.append(dict(t=t, L=L, S=S))
             pbar.set_description(
-                f"t={t:.2f}, next={next_check:.2f}, S={S:.2f}/{2/lr:.2f}"
+                f"t={t:.2f}, next={next_check:.2f}, L={L:.6f}, S={S:.2f}/{2/lr:.2f}"
             )
             pbar.refresh()
             if S >= 2 / lr:
@@ -45,7 +45,7 @@ def find_instability(p, U, lr, loss):
                 dt = min(dt, 0.1)
             next_check = t + dt
             prev = (t, p, S)
-        pbar.set_description(f"t={t:.2f}, next={next_check:.2f}, S={S:.2f}/{2/lr:.2f}")
+        pbar.set_description(f"t={t:.2f}, next={next_check:.2f}, L={L:.6f}, S={S:.2f}/{2/lr:.2f}")
         t += lr
         p = p - lr * dL
         pbar.update()
@@ -59,7 +59,7 @@ EigenSystem = namedtuple("EigenSystem", "p S u")
 
 
 def track_dynamics(
-    p, ref_U, lr, loss, steps, num_proj_steps, generalized_pred=False, save_dir=None
+    p, ref_U, lr, loss, steps, num_proj_steps, generalized_pred=False, save_dir=None, writer=None
 ):
     def check_eigengap(T: TaylorCenter, ref_U):
         p, L, dL, S, u, dS = T
@@ -218,6 +218,13 @@ def track_dynamics(
         rho4 = power_iter(lambda v: loss.D(p, 4, v, v, v), u)[0]
         return dict(F=(xs, F), rho3=rho3, rho4=rho4)
 
+    def write_stats(d, writer, step):
+        for top_k in d.keys():
+            for k in d[top_k].keys():
+                val = d[top_k][k]
+                val = val.item() if hasattr(val, 'item') else val
+                writer.add_scalar(top_k + '/' + k, val, global_step=step)
+
     ref_u = ref_U[:, 0]
     dagger = project(taylor_center(p, ref_u))
     gd = p
@@ -234,20 +241,24 @@ def track_dynamics(
             gf=gf_stats_fn(gf, dagger),
             dagger=constants_fn(dagger),
         )
+        write_stats(stats, writer, i)
         save_list.append(stats)
         if i % 50 == 0:
             ref_U = ref_U.at[:, 0].set(dagger.u)
             eigs, ref_U = check_eigengap(dagger, ref_U)
             betas = update_betas(betas, dagger, step=i, save_step=True)
             slow_stats[i] = slow_stats_fn(dagger)
+            writer.add_scalar('gd/rho3', slow_stats[i]['rho3'].item(), global_step=i)
+            writer.add_scalar('gd/rho4', slow_stats[i]['rho4'].item(), global_step=i)
             if eigs[1] > 1.9 / lr:
                 print(f"Step = {i}, eigenvalues at theta dagger: {eigs}")
                 print("Second largest eigenvalue exceeded threshold")
                 break
             dynamics = tree_stack(save_list)
             dynamics["beta"] = {key: jnp.array(val[1]) for key, val in betas.items()}
+            import IPython; IPython.embed()  # Todo: beta
             dynamics["slow_stats"] = slow_stats
-            tree_save(dynamics, save_dir / "dynamics.pytree", overwrite=True)
+            tree_save(dynamics, save_dir + "/dynamics.pytree", overwrite=True)
         else:
             betas = update_betas(betas, dagger, step=i, save_step=False)
 

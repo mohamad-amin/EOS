@@ -1,11 +1,12 @@
+import jax
 from flax import linen as nn
 from jax import numpy as jnp
-from models.simple import CNN, MLP
+from models.simple import CNN, MLP, NormalizedMLP, NormalizedCNN
 from models.resnet import ResNet18
-from models.vgg import vgg11
-from models.bert import bert_tiny
+# from models.vgg import vgg11
+# from models.bert import bert_tiny
 from models.transformer import Transformer
-from transformers.modeling_flax_utils import ACT2FN
+from functools import partial
 from data import (
     cifar10,
     cifar10_binary,
@@ -22,9 +23,11 @@ model_dict = {
     "mlp": MLP,
     "cnn": CNN,
     "resnet18": ResNet18,
-    "vgg": vgg11,
-    "bert_tiny": bert_tiny,
+    # "vgg": vgg11,
+    # "bert_tiny": bert_tiny,
     "transformer": Transformer,
+    "normalized_mlp": NormalizedMLP,
+    "normalized_cnn": NormalizedCNN,
 }
 
 CrossEntropyLoss = lambda f, y: -nn.log_softmax(f)[y]
@@ -38,4 +41,16 @@ criterion_dict = {
     "logistic": LogisticLoss,
 }
 
-activation_dict = ACT2FN
+
+def quick_gelu(x):
+    return x * jax.nn.sigmoid(1.702 * x)
+
+
+activation_dict = {
+    "gelu": partial(nn.gelu, approximate=False),
+    "relu": nn.relu,
+    "silu": nn.swish,
+    "swish": nn.swish,
+    "gelu_new": partial(nn.gelu, approximate=True),
+    "quick_gelu": quick_gelu,
+}
