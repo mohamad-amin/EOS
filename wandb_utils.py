@@ -10,7 +10,6 @@ def init_wandb(config, save_dir, specific_tag):
     tags = [
         config['data']['name'],
         config['model']['name'],
-        config['train']['lr'],
         config['train']['criterion'],
         specific_tag
     ]

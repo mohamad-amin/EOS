@@ -13,9 +13,9 @@ train:
   lr: 0.002
   criterion: cat_mse
   ghost_batch_size: 999999
-  use_wandb: false
+  use_wandb: true
 
 computation:
-  steps: 20000
+  steps: 2000
   num_proj_steps: 3
   generalized_pred: 3

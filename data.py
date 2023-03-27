@@ -16,6 +16,15 @@ def cifar10(n):
     return x, y
 
 
+def mnist(n):
+    trainset = load_from_disk("mnist_files")["train"]
+    x = np.stack(trainset[:n]["image"])
+    y = np.array(trainset[:n]["label"])
+    x, y = jnp.array(x, dtype=jnp.float32), jnp.array(y, dtype=jnp.int32)
+    x = (x - x.mean((0, 1, 2))) / x.std((0, 1, 2))
+    return x, y
+
+
 def cifar10_binary(n):
     # trainset = load_dataset("cifar10")["train"]
     trainset = load_from_disk("data_files")["train"]

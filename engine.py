@@ -74,13 +74,15 @@ class Engine(BaseEngine):
 
         def build_model(model_config):
             width = model_config['width']
+            depth = model_config['depth']
             num_classes = model_config['n_classes']
             activation = activation_dict[model_config['activation']]
             name = model_config['name']
             kwargs = {
                 'activation': activation,
                 'n_classes': num_classes,
-                'width': width
+                'width': width,
+                'depth': depth
             }
             if name.startswith('normalized_'):
                 kwargs.update({
@@ -97,6 +99,7 @@ class Engine(BaseEngine):
             criterion=self.criterion,
             batch_size=min(self.train_config['ghost_batch_size'], self.data_config['train_count']),
             model_key=model_key,
+            l2_reg=self.train_config.get('lr_reg', 0.0)
         )
         dtype_dict = dict(f32=jnp.float32, f64=jnp.float64)
         self.loss = loss._replace(

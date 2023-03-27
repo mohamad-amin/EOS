@@ -176,6 +176,9 @@ def construct_task_name(explanation):
     if 'train_--_lr' in explanation:
         name += extract_query('train_--_lr', addition='lr')
 
+    if 'train_--_l2_reg' in explanation:
+        name += extract_query('train_--_l2_reg', addition='reg')
+
     if 'train_--_criterion' in explanation:
         name += extract_query('train_--__criterion', 'cr')
 

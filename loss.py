@@ -39,7 +39,7 @@ def D(f, x, order=1, *vecs):
 Loss = namedtuple("Loss", "value grad value_and_grad D eig")
 
 
-def build_loss(model, data, criterion, batch_size=None, model_key=None, benchmark=True):
+def build_loss(model, data, criterion, l2_reg=0.0, batch_size=None, model_key=None, benchmark=True):
     data = tree_map(lambda x: jnp.array(x, dtype=x.dtype), data)
     p = model.init(model_key, data[0][:1])
     p = tree_map(lambda x: x.astype(jnp.float32), p)
@@ -55,7 +55,9 @@ def build_loss(model, data, criterion, batch_size=None, model_key=None, benchmar
         out = f(p, x)
         out = out.reshape(-1, out.shape[-1])
         y = y.reshape(-1)
-        return vmap(criterion)(out, y).mean(0)
+        # return vmap(criterion)(out, y).mean(0)
+        trainable_p = ravel_pytree(unravel(p)['params'])[0]
+        return vmap(criterion)(out, y).mean(0) + l2_reg * jnp.linalg.norm(trainable_p)
 
     if batch_size is not None:
         n = len(data[0])

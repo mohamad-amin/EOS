@@ -49,7 +49,7 @@ def find_instability(p, U, lr, loss, writer):
         t += lr
         p = p - lr * dL
         pbar.update()
-    pbar.set_description(f"t={t:.2f}, S={S:.2f}/{2/lr:.2f}")
+    pbar.set_description(f"t={t:.2f}, L={L:.6f}, S={S:.2f}/{2/lr:.2f}")
     pbar.close()
     return p, U, tree_stack(save_list)
 

@@ -8,6 +8,7 @@ from models.resnet import ResNet18
 from models.transformer import Transformer
 from functools import partial
 from data import (
+    mnist,
     cifar10,
     cifar10_binary,
     sst2,
@@ -15,6 +16,7 @@ from data import (
 
 data_dict = {
     "cifar10": cifar10,
+    "mnist": mnist,
     "cifar10_binary": cifar10_binary,
     "sst2": sst2,
 }
